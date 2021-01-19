@@ -4,6 +4,7 @@ var jwt = require('jsonwebtoken');
 var Users = require('../models/users')
 var Letters = require('../models/letters')
 var Datadates = require('../models/datadates')
+var Maps = require('../models/maps')
 
 /* GET home page. */
 router.get('/users', function (req, res, next) {
@@ -33,7 +34,7 @@ router.post('/users/register', function (req, res, next) {
           })
         })
       } else {
-        res.json({
+        res.status(201).json({
           msg: "Password not match"
         })
       }
@@ -60,7 +61,7 @@ router.post('/users/login', function (req, res, next) {
           })
         })
       } else {
-        res.json({
+        res.status(201).json({
           msg: "Password not match"
         })
       }
@@ -73,12 +74,11 @@ router.post('/users/login', function (req, res, next) {
 })
 
 router.post('/users/check', verifyToken, function (req, res, next) {
-  console.log(req.token)
   jwt.verify(req.token, 'secretkey', (err, authData) => {
     if (err) {
       res.sendStatus(403);
     } else {
-      res.json({
+      res.status(201).json({
         valid: true,
         data: authData
       });
@@ -105,7 +105,7 @@ router.post('/data', verifyToken, function (req, res, next) {
     res.status(201).json({
       success: true,
       message: "data have been added",
-      data
+      data: data
     })
   })
 
@@ -149,13 +149,13 @@ router.get('/data/:id', verifyToken, function (req, res, next) {
   var _id = req.params.id
   Letters.findById(_id, (err, data) => {
     if (data != null) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: "data found",
         data: data
       })
     }else{
-      res.status(201).json({
+      res.status(200).json({
         success: false,
         message: "data not found"
       })
@@ -261,6 +261,99 @@ router.post('/datadate/search', verifyToken, function (req, res, next) {
   var { letter, frequency } = req.body
 
   Datadates.find({ $or: [{ letter, frequency }, { letter }, { frequency }] }, (err, data) => {
+    if (data.length > 0) {
+      res.status(201).json({
+        data: data
+      })
+    }else{
+      res.status(201).json({
+        data: "Data not found"
+      })
+    }
+  })
+
+})
+
+/*--------------------------------- Challange 33 ---------------------------------------------------------*/
+
+router.post('/maps', verifyToken, function (req, res, next) {
+  var { title, lat, lang } = req.body;
+
+  Maps.create({ title, lat, lang }, (err, data) => {
+    res.status(201).json({
+      success: true,
+      message: "data have been added",
+      data
+    })
+  })
+
+});
+
+router.get('/maps', verifyToken, function (req, res, next) {
+  Maps.find({}, (err, data) => {
+    if (data.length > 0) {
+      res.status(200).json({
+        data
+      })
+    }else{
+      res.json({
+        msg: 'Data not found'
+      })
+    }
+  })
+
+})
+
+router.put('/maps/:id', verifyToken, function (req, res, next) {
+  var _id = req.params.id
+  var { title, lat, lang } = req.body
+  Maps.findByIdAndUpdate(_id, { title, lat, lang }, { new: true }, (err, data) => {
+    res.status(201).json({
+      success: true,
+      message: "data have been updated",
+      data: data
+    })
+  })
+
+})
+
+router.delete('/maps/:id', verifyToken, function (req, res, next) {
+  var _id = req.params.id;
+
+  Maps.findByIdAndRemove(_id, (err, data) => {
+    res.status(201).json({
+      success: true,
+      message: "data have been deleted",
+      data: data
+    })
+  })
+
+});
+
+router.get('/maps/:id', verifyToken, function (req, res, next) {
+  var _id = req.params.id
+
+  Maps.findById(_id, (err, data) => {
+    if (data != null) {
+      res.status(201).json({
+        success: true,
+        message: "data found",
+        data: data
+      })
+    }else{
+      res.status(201).json({
+        success: false,
+        message: "data not found"
+      })
+    }
+  })
+
+})
+
+router.post('/maps/search', verifyToken, function (req, res, next) {
+  var { letter, frequency } = req.body
+
+  Maps.find({ $or: [{ letter, frequency }, { letter }, { frequency }] }, (err, data) => {
     if (data.length > 0) {
       res.status(201).json({
         data: data
